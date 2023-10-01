@@ -128,14 +128,6 @@ struct sprite * sprite_y0_x1_2;
 
 //
 
-struct map map;
-
-struct point points[15];
-
-struct player player;
-
-//
-
 Texture2D texture_play_field;
 Texture2D texture_north;
 Texture2D texture_south;
@@ -147,6 +139,14 @@ struct sprite sprite_north;
 struct sprite sprite_east;
 struct sprite sprite_south;
 struct sprite sprite_west;
+
+//
+
+struct point points[15];
+
+struct map map;
+
+struct player player;
 
 
 
@@ -163,6 +163,8 @@ void update_compass_sprites(void);
 void toggle_background_and_top_sprites(void);
 void update_visible_wall_sprites(void);
 
+void load_map(int id);
+
 
 
 int main(void)
@@ -178,6 +180,15 @@ int main(void)
         {
             game_free();
             game_init();
+        }
+
+        if (IsKeyPressed(KEY_ONE))
+        {
+            load_map(0);
+        }
+        if (IsKeyPressed(KEY_TWO))
+        {
+            load_map(1);
         }
 
         game_update();
@@ -424,7 +435,17 @@ void game_init(void)
 
     //
 
+    texture_play_field = LoadTexture("resources/play_field.png");
+    texture_north = LoadTexture("resources/north.png");
+    texture_east = LoadTexture("resources/east.png");
+    texture_south = LoadTexture("resources/south.png");
+    texture_west = LoadTexture("resources/west.png");
 
+    sprite_play_field = sprite_create_2(texture_play_field, 0, 0, false);
+    sprite_north = sprite_create_2(texture_north, 112, 127, false);
+    sprite_east = sprite_create_2(texture_east, 112, 127, false);
+    sprite_south = sprite_create_2(texture_south, 112, 127, false);
+    sprite_west = sprite_create_2(texture_west, 112, 127, false);
 
     //
 
@@ -435,23 +456,7 @@ void game_init(void)
     sprite_set_is_draw(&array_sprites[1], true);
     sprite_set_is_draw(&array_sprites[2], true);
 
-    map = map_create(32, 32);
-    map_fill(&map, 0);
-
-    int counter = 0;
-
-    for (int i = 0; i < map_get_height(&map); ++i)
-    {
-        for (int j = 0; j < map_get_width(&map); ++j)
-        {
-            if (i == 0 || i == map_get_height(&map) - 1 || j == 0 || j == map_get_width(&map) - 1 || GetRandomValue(0, 100) > 80)
-            {
-                map_set(&map, j, i, counter % 2 == 0 ? 1 : 2);
-                ++counter;
-            }
-        }
-        ++counter;
-    }
+    //
 
     points[0] = point_create(-1, 0);
     points[1] = point_create(1, 0);
@@ -472,19 +477,36 @@ void game_init(void)
     points[13] = point_create(1, 3);
     points[14] = point_create(2, 3);
 
+    map = map_create(32, 32);
+    map_fill(&map, 0);
+
+    int counter = 0;
+
+    for (int i = 0; i < map_get_height(&map); ++i)
+    {
+        for (int j = 0; j < map_get_width(&map); ++j)
+        {
+            if (i == 0 || i == map_get_height(&map) - 1 || j == 0 || j == map_get_width(&map) - 1)
+            {
+                map_set(&map, j, i, counter % 2 == 0 ? 1 : 2);
+                ++counter;
+            }
+        }
+        ++counter;
+    }
+
+    for (int i = 1; i < map_get_height(&map) - 1; ++i)
+    {
+        for (int j = 1; j < map_get_width(&map) - 1; ++j)
+        {
+            if (GetRandomValue(0, 100) > 80)
+            {
+                map_set(&map, j, i, 1);
+            }
+        }
+    }
+
     player = player_create(3, 6, 0);
-
-    texture_play_field = LoadTexture("resources/play_field.png");
-    texture_north = LoadTexture("resources/north.png");
-    texture_east = LoadTexture("resources/east.png");
-    texture_south = LoadTexture("resources/south.png");
-    texture_west = LoadTexture("resources/west.png");
-
-    sprite_play_field = sprite_create_2(texture_play_field, 0, 0, false);
-    sprite_north = sprite_create_2(texture_north, 112, 127, false);
-    sprite_east = sprite_create_2(texture_east, 112, 127, false);
-    sprite_south = sprite_create_2(texture_south, 112, 127, false);
-    sprite_west = sprite_create_2(texture_west, 112, 127, false);
 
     update_compass_sprites();
     update_visible_wall_sprites();
@@ -948,6 +970,79 @@ void update_visible_wall_sprites(void)
                 }
             }
         }
+    }
+
+    is_dirty_render_texture_main = true;
+}
+
+
+
+void load_map(int id)
+{
+    map_free(&map);
+
+    if (id == 0)
+    {
+        map = map_create(32, 32);
+        map_fill(&map, 0);
+
+        int counter = 0;
+
+        for (int i = 0; i < map_get_height(&map); ++i)
+        {
+            for (int j = 0; j < map_get_width(&map); ++j)
+            {
+                if (i == 0 || i == map_get_height(&map) - 1 || j == 0 || j == map_get_width(&map) - 1)
+                {
+                    map_set(&map, j, i, counter % 2 == 0 ? 1 : 2);
+                    ++counter;
+                }
+            }
+            ++counter;
+        }
+
+        for (int i = 1; i < map_get_height(&map) - 1; ++i)
+        {
+            for (int j = 1; j < map_get_width(&map) - 1; ++j)
+            {
+                if (GetRandomValue(0, 100) > 80)
+                {
+                    map_set(&map, j, i, 1);
+                }
+            }
+        }
+
+        player_set_position(&player, 1, map_get_height(&map) - 2);
+        player_set_d(&player, 0);
+
+        update_compass_sprites();
+        update_visible_wall_sprites();
+    }
+    else
+    {
+        map = map_create(10, 10);
+        map_fill(&map, 0);
+
+        int counter = 0;
+
+        for (int i = 0; i < map_get_height(&map); ++i)
+        {
+            for (int j = 0; j < map_get_width(&map); ++j)
+            {
+                if (i == 0 || i == map_get_height(&map) - 1 || j == 0 || j == map_get_width(&map) - 1)
+                {
+                    map_set(&map, j, i, counter % 2 == 0 ? 1 : 2);
+                    ++counter;
+                }
+            }
+            ++counter;
+        }
+
+        player_set_position(&player, 1, map_get_height(&map) - 2);
+        player_set_d(&player, 0);
+
+        update_compass_sprites();
+        update_visible_wall_sprites();
     }
 
     is_dirty_render_texture_main = true;

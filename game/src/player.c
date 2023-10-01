@@ -30,3 +30,9 @@ void player_set_d(struct player * player, int d)
 {
     player->d = d;
 }
+
+void player_set_position(struct player * player, int x, int y)
+{
+    player->x = x;
+    player->y = y;
+}

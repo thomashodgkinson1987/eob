@@ -18,4 +18,6 @@ void player_set_x(struct player * player, int x);
 void player_set_y(struct player * player, int y);
 void player_set_d(struct player * player, int d);
 
+void player_set_position(struct player * player, int x, int y);
+
 #endif
